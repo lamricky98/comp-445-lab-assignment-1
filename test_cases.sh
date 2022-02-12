@@ -38,7 +38,7 @@ echo "EXECUTE python httpc.py post -h Content-Type:application/x-www-form-urlenc
 python httpc.py post -h Content-Type:application/x-www-form-urlencoded -d blurb=sheeesh http://httpbin.org/post
 
 echo ""
-echo "EXECUTE python httpc.py post -h Content-Type:application/json --f file_input.txt http://httpbin.org/post -o post_output.txt"
+echo "EXECUTE python httpc.py post -h Content-Type:application/json --f 'file_input.txt' http://httpbin.org/post -o post_output.txt"
 python httpc.py post -h Content-Type:application/json --f file_input.txt http://httpbin.org/post -o post_output.txt
 echo "EXECUTE cat post_output.txt"
 cat post_output.txt

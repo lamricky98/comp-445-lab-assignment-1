@@ -88,7 +88,8 @@ def process_request(v, h, d, f, getpost, host, port, path, request):
     response_arr = response.split(blank_line + blank_line)
     response_headers = response_arr[0]
     response_headers_arr = response_headers.split(blank_line)
-    response_status = int(response_headers_arr[0].split(' ')[1])
+    responseHeadersArr = response_headers.split(blank_line)
+    response_status = int(responseHeadersArr[0].split(' ')[1])
 
     if response_status >= 300 and response_status < 400:
         pattern = re.search('(Location: )(.+)', response)

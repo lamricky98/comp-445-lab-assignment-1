@@ -24,6 +24,18 @@ def run_client(v, h, d, f, o, getpost, url):
     elif url[0] == "\'" and url[-1] == "\'":
         url = url[1:-1]
 
+    if f is not None:
+        if f[0] == "\"" and f[-1] == "\"":
+            f = f[1:-1]
+        elif f[0] == "\'" and f[-1] == "\'":
+            f = f[1:-1]
+
+    if d is not None:
+        if d[0] == "\"" and d[-1] == "\"":
+            d = d[1:-1]
+        elif d[0] == "\'" and d[-1] == "\'":
+            d = d[1:-1]
+
     if "http://" in url:
         parsed = urlparse(url)
         host = parsed.netloc
@@ -65,6 +77,10 @@ def run_client(v, h, d, f, o, getpost, url):
         if ':' not in h[i]:
             click.echo("Invalid header argument entered.")
             exit()
+        if h[i][0] == "\"" and h[i][-1] == "\"":
+            h[i] = h[i][1:-1]
+        elif h[i][0] == "\'" and h[i][-1] == "\'":
+            h[i] = h[i][1:-1]
 
     requester = httpc_methods.build_request(v, h, d, f, method, host, port, path)
     final_output = httpc_methods.process_request(v, h, d, f, method, host, port, path, requester)
