@@ -25,10 +25,15 @@ def run_client(v, h, d, f, o, getpost, url):
     elif url[0] == "\'" and url[-1] == "\'":
         url = url[1:-1]
 
-    parsed = urlparse(url)
-    host = parsed.netloc
-    port = parsed.port
-    path = parsed.path + ('?' if parsed.params is not None else "") + parsed.params + parsed.query + parsed.fragment
+    if "http://" in url:
+        parsed = urlparse(url)
+        host = parsed.netloc
+        port = parsed.port
+        path = parsed.path + ('?' if parsed.params != '' else "") + parsed.params + parsed.query + parsed.fragment
+    else:
+        host = url.split("/")[0]
+        path = "/" + url.split("/")[1]
+        port = None
 
     if port is None:
         port = 80
