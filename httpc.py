@@ -35,7 +35,7 @@ def run_client(v, h, d, f, o, getpost, url):
         path = "/" + url.split("/")[1]
         port = None
 
-    if port is None or port is "":
+    if port is None or port == "":
         port = 80
     else:
         port = int(port)

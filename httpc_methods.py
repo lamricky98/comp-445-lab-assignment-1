@@ -7,7 +7,7 @@ blank_line = '\r\n'
 path = "/"
 port = 80
 content_type = "Content-Type: {content_type}"
-content_length = "Content-length: {content_length}"
+content_length = "Content-Length: {content_length}"
 
 
 def is_valid_header(key):
@@ -23,7 +23,6 @@ def is_valid_header(key):
 def build_request(v, h, d, f, getpost, host, port, path):
     headersJson = {
         "Host": "",
-        "Connection": "Keep-Alive"
     }
 
     if h is not None:
