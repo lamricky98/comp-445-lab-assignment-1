@@ -6,8 +6,8 @@ URL_REGEX = "((http[s]?|ftp):\/)?\/?((www\.)?([^:\/\s\?]+))(:(\d+))?(((\/[\w\/]*
 blank_line = '\r\n'
 path = "/"
 port = 80
-contentType = "Content-Type: {content_type}"
-contentLength = "Content-length: {content_length}"
+content_type = "Content-Type: {content_type}"
+content_length = "Content-length: {content_length}"
 
 
 def is_valid_header(key):
@@ -59,7 +59,7 @@ def build_request(v, h, d, f, getpost, host, port, path):
 
         data_bytes = parameters.encode()
         request = ''.join([request,
-                           contentLength.format(content_length=len(data_bytes)), blank_line, blank_line,
+                           content_length.format(content_length=len(data_bytes)), blank_line, blank_line,
                            parameters])
 
     request = ''.join([request, blank_line])
@@ -89,11 +89,14 @@ def process_request(v, h, d, f, getpost, host, port, path, request):
     response_arr = response.split(blank_line + blank_line)
     response_headers = response_arr[0]
     response_headers_arr = response_headers.split(blank_line)
-    response_status = parse_response_status(response_headers)
+    response_status = int(response_headers_arr[0].split(' ')[1])
 
     if response_status >= 300 and response_status < 400:
-
-        newUrl = parse_redirect_url_for_300(response)
+        pattern = re.search('(Location: )(.+)', response)
+        if (pattern.group(2)):
+            newUrl = pattern.group(2)
+        else:
+            newUrl = "http://httpbin.org/get"
         matcher = re.search(URL_REGEX, newUrl)
         host = matcher.group(5)
         porter = int(matcher.group(7))
@@ -104,11 +107,18 @@ def process_request(v, h, d, f, getpost, host, port, path, request):
         if pather is None:
             pather = path
         print(response_headers_arr[0])
-        print("Redirect url: ", newUrl)
-        answer = input("Do you accept to follow the redirection link? [Y/n]: ")
-        if answer != 'n':
-            requester = build_request(v, h, d, f, getpost, host, port, path)
-            final_output = process_request(v, h, d, f, getpost, host, port, path, requester)
+
+        while True:
+            print("Redirect url: ", newUrl)
+            answer = input("Do you accept to follow the redirection link? [y/n]: ")
+            if answer == 'Y' or answer == 'y':
+                requester = build_request(v, h, d, f, getpost, host, port, path)
+                final_output = process_request(v, h, d, f, getpost, host, port, path, requester)
+                break
+            elif answer != 'n':
+                print("Please enter a valid answer.")
+            elif answer == 'n':
+                break
 
     else:
         if v:
@@ -118,21 +128,3 @@ def process_request(v, h, d, f, getpost, host, port, path, request):
             final_output = response_arr[1]
 
     return final_output
-
-
-# #######################
-# Extract response status
-# #######################
-def parse_response_status(response_headers):
-    response_headers_arr = response_headers.split(blank_line)
-    response_status = int(response_headers_arr[0].split(' ')[1])
-    return response_status
-
-
-# #######################
-# Extract redirect url
-# #######################
-def parse_redirect_url_for_300(response):
-    pattern = re.search('(Location: )(.+)', response)
-    return pattern.group(2)
-    return "http://httpbin.org/get"
