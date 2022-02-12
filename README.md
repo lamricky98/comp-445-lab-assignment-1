@@ -23,11 +23,8 @@ See usage below for examples.
 
 httpc (get|post) [-v] (-h "k:v")* [-d inline-data] [-f file] URL
 
-- Easiest way to try out the code is to check out test_cases.sh
+- Easiest way to get familiar with the program is to check out test_cases.sh
 - Open and run test_cases.sh and look at the output.
 - Output includes the --help command to explain each option and argument!
-
-# Features
-
 
 
