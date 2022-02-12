@@ -20,7 +20,7 @@ See usage below for examples.
 
 # Usage
 
-- Open a terminal in the directory of the .py files
+- Open a terminal (shell, command prompt, etc...) in the directory of the .py files
 - In the terminal, enter the following command and its options:
 
 python httpc.py (get|post) [-v] (-h "k:v")* [-d inline-data] [-f file] URL

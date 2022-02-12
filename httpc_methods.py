@@ -4,23 +4,14 @@ import sys
 
 URL_REGEX = "((http[s]?|ftp):\/)?\/?((www\.)?([^:\/\s\?]+))(:(\d+))?(((\/[\w\/]*)?(\.\w+))?(\?([\w=&]+))?)"
 blank_line = '\r\n'
-path = "/"
-port = 80
 content_type = "Content-Type: {content_type}"
 content_length = "Content-Length: {content_length}"
 
 
-def is_valid_header(key):
-    if (str(key) == "Host" or str(key) == "Content-length"):
-        return False
-    return True
-
-
-# #######################
-# Build HTTP request
-# #######################
-
-def build_request(v, h, d, f, getpost, host, port, path):
+"""
+Appends a proper header to the GET or POST request.
+"""
+def build_request(h, d, f, getpost, host, path):
     headersJson = {
         "Host": "",
     }
@@ -29,8 +20,8 @@ def build_request(v, h, d, f, getpost, host, port, path):
         for header in h:
             split_header = header.split(':')
             header_key = str(split_header[0])
-            if (not (is_valid_header(header_key))):
-                print("Cannot override header: " + header_key + "\n")
+            if ((str(header_key) == "Host" or str(header_key).upper() == "Content-Length".upper())):
+                print("The following header could not be overridden: " + header_key + "\n")
             else:
                 headersJson[header_key] = split_header[1]
 
@@ -65,9 +56,9 @@ def build_request(v, h, d, f, getpost, host, port, path):
     return request
 
 
-# #######################
-# Process Http Request
-# #######################
+"""
+Performs the GET or POST operation as specified in the getpost parameter.
+"""
 def process_request(v, h, d, f, getpost, host, port, path, request):
     try:
         socketer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # SOCK_STREAM for TCP
@@ -77,7 +68,7 @@ def process_request(v, h, d, f, getpost, host, port, path, request):
         while True:
             try:
                 socketer.settimeout(0.2)
-                response += socketer.recv(1024).decode("utf-8")
+                response += socketer.recv(2048).decode("utf-8")
             except:
                 break
 
@@ -88,9 +79,13 @@ def process_request(v, h, d, f, getpost, host, port, path, request):
     response_arr = response.split(blank_line + blank_line)
     response_headers = response_arr[0]
     response_headers_arr = response_headers.split(blank_line)
-    responseHeadersArr = response_headers.split(blank_line)
-    response_status = int(responseHeadersArr[0].split(' ')[1])
 
+    try:
+        response_status = int(response_headers_arr[0].split(' ')[1])
+    except (IndexError):
+        response_status = 200
+
+    #code block for redirection
     if response_status >= 300 and response_status < 400:
         pattern = re.search('(Location: )(.+)', response)
         if (pattern.group(2)):
@@ -112,7 +107,7 @@ def process_request(v, h, d, f, getpost, host, port, path, request):
             print("Redirect url: ", newUrl)
             answer = input("Do you accept to follow the redirection link? [y/n]: ")
             if answer == 'Y' or answer == 'y':
-                requester = build_request(v, h, d, f, getpost, host, port, path)
+                requester = build_request(h, d, f, getpost, host, path)
                 final_output = process_request(v, h, d, f, getpost, host, port, path, requester)
                 break
             elif answer != 'n':
@@ -121,7 +116,7 @@ def process_request(v, h, d, f, getpost, host, port, path, request):
                 break
 
     else:
-        if v:
+        if v: #verbose output
             final_output = request
             final_output = final_output + response
         else:
