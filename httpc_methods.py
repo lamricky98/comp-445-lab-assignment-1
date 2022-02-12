@@ -42,10 +42,6 @@ def build_request(v, h, d, f, getpost, host, port, path):
     if headersJson:
         for key, value in headersJson.items():
             headersJson[key] = value
-            request = ''.join([request, key, ':', value, blank_line])
-
-    if headersJson:
-        for key, value in headersJson.items():
             request = ''.join([request, key, ': ', value, blank_line])
 
     if getpost == "POST":
@@ -75,11 +71,17 @@ def build_request(v, h, d, f, getpost, host, port, path):
 # #######################
 def process_request(v, h, d, f, getpost, host, port, path, request):
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # SOCK_STREAM for TCP
-        s.connect((host, port))
-        s.send(request.encode())
-        responseBytes = s.recv(4096)
-        response = responseBytes.decode()
+        socketer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # SOCK_STREAM for TCP
+        socketer.connect((host, port))
+        socketer.send(request.encode())
+        response = ""
+        while True:
+            try:
+                socketer.settimeout(0.2)
+                response += socketer.recv(1024).decode("utf-8")
+            except:
+                break
+
     except:
         print("An error occurred, please retry: ", sys.exc_info())
         sys.exit(0)
@@ -94,9 +96,9 @@ def process_request(v, h, d, f, getpost, host, port, path, request):
         newUrl = parse_redirect_url_for_300(response)
         matcher = re.search(URL_REGEX, newUrl)
         host = matcher.group(5)
-        port = int(matcher.group(7))
-        if port is None:
-            port = port
+        porter = int(matcher.group(7))
+        if porter is None:
+            porter = port
 
         pather = matcher.group(8)
         if pather is None:
@@ -110,7 +112,8 @@ def process_request(v, h, d, f, getpost, host, port, path, request):
 
     else:
         if v:
-            final_output = response
+            final_output = request
+            final_output = final_output + response
         else:
             final_output = response_arr[1]
 

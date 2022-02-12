@@ -1,55 +1,15 @@
 import re
 
 import click
-import socket
-import argparse
-import sys
 import httpc_methods
-
-from click import UsageError
-
-# Helper class to have mutually exclusive options -d and -f
-class MutuallyExclusiveOption(click.Option):
-    def __init__(self, *args, **kwargs):
-        self.mutually_exclusive = set(kwargs.pop('mutually_exclusive', []))
-        help = kwargs.get('help', '')
-        if self.mutually_exclusive:
-            ex_str = ', '.join(self.mutually_exclusive)
-            kwargs['help'] = help + (
-                    ' NOTE: This argument is mutually exclusive with '
-                    ' arguments: [' + ex_str + '].'
-            )
-        super(MutuallyExclusiveOption, self).__init__(*args, **kwargs)
-
-    def handle_parse_result(self, ctx, opts, args):
-        if self.mutually_exclusive.intersection(opts) and self.name in opts:
-            raise UsageError(
-                "Illegal usage: `{}` is mutually exclusive with "
-                "arguments `{}`.".format(
-                    self.name,
-                    ', '.join(self.mutually_exclusive)
-                )
-            )
-
-        return super(MutuallyExclusiveOption, self).handle_parse_result(
-            ctx,
-            opts,
-            args
-        )
-
-
-
 
 @click.command()
 @click.argument('getpost', required=True)
 @click.option('-v', is_flag=True, help="Enables a verbose output from the command-line.")
 @click.option('-h', multiple=True, help="Set the header of the request in the format 'key: value.'")
-@click.option('-d', cls=MutuallyExclusiveOption,
-              help="Associates the body of the HTTP Request with inline data from the command line.",
-              mutually_exclusive=["d"])
-@click.option('-f', cls=MutuallyExclusiveOption,
-              help="Associates the body of the HTTP Request with the data from a given file.",
-              mutually_exclusive=["f"])
+@click.option('-d', help="Associates the body of the HTTP Request with inline data from the command line.")
+@click.option('-f', help="Associates the body of the HTTP Request with the data from a given file.")
+@click.option('-o', help="Write the body of the response to the specified file.")
 @click.argument('URL', required=True)
 def run_client(v, h, d, f, getpost, url):
     """
@@ -58,10 +18,26 @@ def run_client(v, h, d, f, getpost, url):
     GETPOST: Executes the get or post HTTP methods respectively as specified.
     URL: determines the targeted HTTP server.
     """
+
+    if url[0] == "\"" and url[1] == "\"":
+        url = url[1:-1]
+    elif url[0] == "\'" and url[1] == "\'":
+        url = url[1:-1]
+
     matcher = re.search(httpc_methods.URL_REGEX, url)
     host = matcher.group(5)
     port = matcher.group(7)
     path = matcher.group(8)
+
+    if port is None:
+        port = 80
+    else:
+        port = int(port)
+
+    if path is None or path == "":
+        path = "/"
+    else:
+        path = path
 
     if (getpost.upper() == "GET"):
         method = "GET"
