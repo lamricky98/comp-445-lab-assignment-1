@@ -2,16 +2,17 @@ import re
 
 import click
 import httpc_methods
+from urllib.parse import urlparse
 
 @click.command()
 @click.argument('getpost', required=True)
-@click.option('-v', is_flag=True, help="Enables a verbose output from the command-line.")
-@click.option('-h', multiple=True, help="Set the header of the request in the format 'key: value.'")
-@click.option('-d', help="Associates the body of the HTTP Request with inline data from the command line.")
-@click.option('-f', help="Associates the body of the HTTP Request with the data from a given file.")
-@click.option('-o', help="Write the body of the response to the specified file.")
+@click.option('-v', '--v', is_flag=True, help="Enables a verbose output from the command-line.")
+@click.option('-h', '--h', multiple=True, help="Set the header of the request in the format 'key: value.'")
+@click.option('-d', '--d', help="Associates the body of the HTTP Request with inline data from the command line.")
+@click.option('-f', '--f', help="Associates the body of the HTTP Request with the data from a given file.")
+@click.option('-o', '--o', help="Write the body of the response to the specified file.")
 @click.argument('URL', required=True)
-def run_client(v, h, d, f, getpost, url):
+def run_client(v, h, d, f, o, getpost, url):
     """
     Runs the httpc client.
 
@@ -19,15 +20,15 @@ def run_client(v, h, d, f, getpost, url):
     URL: determines the targeted HTTP server.
     """
 
-    if url[0] == "\"" and url[1] == "\"":
+    if url[0] == "\"" and url[-1] == "\"":
         url = url[1:-1]
-    elif url[0] == "\'" and url[1] == "\'":
+    elif url[0] == "\'" and url[-1] == "\'":
         url = url[1:-1]
 
-    matcher = re.search(httpc_methods.URL_REGEX, url)
-    host = matcher.group(5)
-    port = matcher.group(7)
-    path = matcher.group(8)
+    parsed = urlparse(url)
+    host = parsed.netloc
+    port = parsed.port
+    path = parsed.path + ('?' if parsed.params is not None else "") + parsed.params + parsed.query + parsed.fragment
 
     if port is None:
         port = 80
@@ -63,7 +64,11 @@ def run_client(v, h, d, f, getpost, url):
     requester = httpc_methods.build_request(v, h, d, f, method, host, port, path)
     final_output = httpc_methods.process_request(v, h, d, f, method, host, port, path, requester)
 
-    click.echo(final_output)
+    if o is not None:
+        with open(o) as output_file:
+            output_file.write(final_output)
+    else:
+        click.echo(final_output)
 
 
 if __name__ == '__main__':
