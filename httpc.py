@@ -1,7 +1,10 @@
+import re
+
 import click
 import socket
 import argparse
 import sys
+import httpc_methods
 
 from click import UsageError
 
@@ -35,22 +38,10 @@ class MutuallyExclusiveOption(click.Option):
         )
 
 
-POST = "POST"
-GET = "GET"
-URL_REGEX = "((http[s]?|ftp):\/)?\/?((www\.)?([^:\/\s\?]+))(:(\d+))?(((\/[\w\/]*)?(\.\w+))?(\?([\w=&]+))?)"
-blank_line = '\r\n'
-path = "/"
-port = 80
-contentType = "Content-Type: {content_type}"
-contentLength = "Content-length: {content_length}"
+
 
 @click.command()
-@click.option('get', is_flag=True, cls=MutuallyExclusiveOption,
-              help="Executes the HTTP GET method.",
-              mutually_exclusive=["post"])
-@click.option('post', is_flag=True, cls=MutuallyExclusiveOption,
-              help="Executes the HTTP POST method.",
-              mutually_exclusive=["get"])
+@click.argument('getpost', required=True)
 @click.option('-v', is_flag=True, help="Enables a verbose output from the command-line.")
 @click.option('-h', multiple=True, help="Set the header of the request in the format 'key: value.'")
 @click.option('-d', cls=MutuallyExclusiveOption,
@@ -59,35 +50,45 @@ contentLength = "Content-length: {content_length}"
 @click.option('-f', cls=MutuallyExclusiveOption,
               help="Associates the body of the HTTP Request with the data from a given file.",
               mutually_exclusive=["f"])
-@click.argument('URL')
-def run_client(v, h, d, f, get, post):
+@click.argument('URL', required=True)
+def run_client(v, h, d, f, getpost, url):
     """
     Runs the httpc client.
 
+    GETPOST: Executes the get or post HTTP methods respectively as specified.
     URL: determines the targeted HTTP server.
     """
-    conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        conn.connect((host, port))
-        print("Type any thing then ENTER. Press Ctrl+C to terminate")
-        while True:
-            line = sys.stdin.readline(1024)
-            request = line.encode("utf-8")
-            conn.sendall(request)
-            # MSG_WAITALL waits for full request or error
-            response = conn.recv(len(request), socket.MSG_WAITALL)
-            sys.stdout.write("Replied: " + response.decode("utf-8"))
-    finally:
-        conn.close()
+    matcher = re.search(httpc_methods.URL_REGEX, url)
+    host = matcher.group(5)
+    port = matcher.group(7)
+    path = matcher.group(8)
 
+    if (getpost.upper() == "GET"):
+        method = "GET"
+        if f is not None or d is not None:
+            click.echo("Cannot have data or file for GET method.")
+            exit()
+    elif (getpost.upper() == "POST"):
+        method = "POST"
+        if f is None and d is None:
+            click.echo("Must have either data or file for POST method.")
+            exit()
+        elif f is not None and d is not None:
+            click.echo("Cannot have both data and file for POST method.")
+            exit()
+    else:
+        click.echo("Invalid query. Must specify GET or POST.")
 
-# Usage: python echoclient.py --host host --port port
-parser = argparse.ArgumentParser()
-parser.add_argument("--host", help="server host", default="localhost")
-parser.add_argument("--port", help="server port", type=int, default=8007)
-args = parser.parse_args()
-run_client(args.host, args.port)
+    for i in range(len(h)):
+        if ':' not in h[i]:
+            click.echo("Invalid header argument entered.")
+            exit()
+
+    requester = httpc_methods.build_request(v, h, d, f, method, host, port, path)
+    final_output = httpc_methods.process_request(v, h, d, f, method, host, port, path, requester)
+
+    click.echo(final_output)
+
 
 if __name__ == '__main__':
-    server = HTTPServer()
-    server.start()
+    run_client()
