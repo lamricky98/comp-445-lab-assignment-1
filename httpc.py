@@ -1,8 +1,7 @@
-import re
-
 import click
 import httpc_methods
 from urllib.parse import urlparse
+
 
 @click.command()
 @click.argument('getpost', required=True)
@@ -29,7 +28,8 @@ def run_client(v, h, d, f, o, getpost, url):
         parsed = urlparse(url)
         host = parsed.netloc
         port = parsed.port
-        path = parsed.path + ('?' if parsed.params != "" or parsed.query != "" else "") + parsed.params + parsed.query + parsed.fragment
+        path = parsed.path + (
+            '?' if parsed.params != "" or parsed.query != "" else "") + parsed.params + parsed.query + parsed.fragment
     else:
         host = url.split("/")[0]
         path = "/" + url.split("/")[1]

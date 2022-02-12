@@ -1,0 +1,24 @@
+GET /get?course=networking&assignment=1 HTTP/1.1
+Host: httpbin.org
+
+HTTP/1.1 200 OK
+Date: Sat, 12 Feb 2022 16:39:56 GMT
+Content-Type: application/json
+Content-Length: 284
+Connection: keep-alive
+Server: gunicorn/19.9.0
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true
+
+{
+  "args": {
+    "assignment": "1", 
+    "course": "networking"
+  }, 
+  "headers": {
+    "Host": "httpbin.org", 
+    "X-Amzn-Trace-Id": "Root=1-6207e2dc-17b3a5cb05ed8a8e297390eb"
+  }, 
+  "origin": "173.178.53.159", 
+  "url": "http://httpbin.org/get?course=networking&assignment=1"
+}
