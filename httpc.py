@@ -29,7 +29,7 @@ def run_client(v, h, d, f, o, getpost, url):
         parsed = urlparse(url)
         host = parsed.netloc
         port = parsed.port
-        path = parsed.path + ('?' if parsed.params != '' else "") + parsed.params + parsed.query + parsed.fragment
+        path = parsed.path + ('?' if parsed.params != "" or parsed.query != "" else "") + parsed.params + parsed.query + parsed.fragment
     else:
         host = url.split("/")[0]
         path = "/" + url.split("/")[1]
@@ -70,7 +70,7 @@ def run_client(v, h, d, f, o, getpost, url):
     final_output = httpc_methods.process_request(v, h, d, f, method, host, port, path, requester)
 
     if o is not None:
-        with open(o) as output_file:
+        with open(o, 'w') as output_file:
             output_file.write(final_output)
     else:
         click.echo(final_output)
