@@ -65,12 +65,15 @@ def process_request(v, h, d, f, getpost, host, port, path, request):
         socketer.connect((host, port))
         socketer.send(request.encode())
         response = ""
-        while True:
-            try:
-                socketer.settimeout(0.2)
-                response += socketer.recv(2048).decode("utf-8")
-            except:
-                break
+
+        #while True:
+            #try:
+                #socketer.settimeout(0.2)
+                #response += socketer.recv(1024).decode("utf-8")
+            #except:
+                #break
+
+        response = socketer.recv(4096, socket.MSG_WAITALL).decode("utf-8")
 
     except:
         print("An error occurred, please retry: ", sys.exc_info())

@@ -57,6 +57,9 @@ def run_client(v, h, d, f, o, getpost, url):
     else:
         path = path
 
+    if ":" in host:
+        host = host.split(":")[0]
+
     if (getpost.upper() == "GET"):
         method = "GET"
         if f is not None or d is not None:
